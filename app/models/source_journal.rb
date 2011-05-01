@@ -16,6 +16,7 @@ class SourceJournal < ActiveRecord::Base
         journal.save() if journal.journalized_id
       end
 
+      # FIXME: what the hell is wrong with journalized_id?!
       RedmineMerge::Mapper.add_journal(source_journals.id, journal.id) if journal.journalized_id
     end
   end
