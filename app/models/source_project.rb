@@ -7,20 +7,28 @@ class SourceProject < ActiveRecord::Base
   
   def self.migrate
     all(:order => 'lft ASC').each do |source_project|
-      next if Project.find_by_name(source_project.name)
-      next if Project.find_by_identifier(source_project.identifier)
+      project = Project.find_by_identifier(source_project.identifier)
+      if !project.nil?
+        RedmineMerge::Mapper.add_project(source_project.id, project.id)
+        next
+      end
+      project = Project.find_by_name(source_project.name)
+      if !project.nil?
+        RedmineMerge::Mapper.add_project(source_project.id, project.id)
+        next
+      end
       
-      project = Project.create!(source_project.attributes) do |p|
-        p.status = source_project.status
-        if source_project.enabled_modules
-          p.enabled_module_names = source_project.enabled_modules.collect(&:name)
-        end
+      project = Project.create!(source_project.attributes)
+      project.status = source_project.status
+      if source_project.enabled_modules
+        project.enabled_module_names = source_project.enabled_modules.collect(&:name)
+      end
 
-        if source_project.trackers
-          source_project.trackers.each do |source_tracker|
-            merged_tracker = Tracker.find_by_name(source_tracker.name)
-            p.trackers << merged_tracker if merged_tracker
-          end
+      if source_project.trackers
+        source_project.trackers.each do |source_tracker|
+          merged_tracker = Tracker.find_by_name(source_tracker.name)
+          # XXX: The following line makes some troubles at times
+          project.trackers << merged_tracker if merged_tracker
         end
       end
       
