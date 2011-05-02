@@ -11,8 +11,8 @@ class SourceWikiPage < ActiveRecord::Base
   def self.recursive_migrate(source_wiki_page_id)
     # Return if already migrated
     if new_id = RedmineMerge::Mapper.get_new_wiki_page_id(source_wiki_page_id)
-		return new_id
-	end
+      return new_id
+    end
 
     source_wiki_page = SourceWikiPage.find(source_wiki_page_id)
     wiki_page = WikiPage.create(source_wiki_page.attributes)

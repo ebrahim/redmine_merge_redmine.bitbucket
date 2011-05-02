@@ -7,16 +7,15 @@ class SourceWiki < ActiveRecord::Base
 
       project = Project.find(RedmineMerge::Mapper.get_new_project_id(source_wiki.project_id))
 
-      wiki = Wiki.create!(source_wiki.attributes) do |w|
-        w.project = project
+      wiki = Wiki.find(:first, :conditions => {:project_id => project.id})
+      if wiki.nil?
+        wiki = Wiki.create(source_wiki.attributes)
+        wiki.project = project
       end
+      wiki.start_page = source_wiki.start_page
+      wiki.save()
 
       RedmineMerge::Mapper.add_wiki(source_wiki.id, wiki.id)
-
-      # Need to remove any default wikis if they exist
-      if project.wiki.start_page == 'Wiki' && wiki.start_page != 'Wiki'
-        project.wiki.destroy
-      end
     end
   end
 end
